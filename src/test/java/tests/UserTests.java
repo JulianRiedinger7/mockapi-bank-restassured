@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -96,6 +97,20 @@ public class UserTests {
     response = Requests.putRequest("/users/" + userId, updatedUser);
 
     Assert.assertEquals(response.getStatusCode(), 200);
+  }
 
+  @Test(dependsOnMethods = "testUpdateExistingAccountNumber")
+  public void testCleanupDatabase() {
+    Response response;
+    for (User user : usersList) {
+      response = Requests.deleteRequest("/users/" + user.getId());
+      Assert.assertEquals(response.getStatusCode(), 200);
+    }
+
+    response = Requests.getRequest("/users");
+
+    usersList = response.jsonPath().getList("", User.class);
+
+    Assert.assertTrue(usersList.isEmpty());
   }
 }
